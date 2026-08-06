@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
 // Security headers applied to every response.
-// CSP note: "connect-src https://avatars.githubusercontent.com" is required for
-// the identity-card PNG export, which inlines the avatar image via fetch.
+// CSP notes:
+// - "connect-src https://avatars.githubusercontent.com" is required for the
+//   identity-card PNG export, which inlines the avatar image via fetch.
+// - The googletagmanager/google-analytics origins are required for Google
+//   Analytics 4 (gtag.js), loaded via next/script in the root layout.
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
@@ -13,11 +16,11 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com",
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://avatars.githubusercontent.com https://github.com",
+      "img-src 'self' data: blob: https://avatars.githubusercontent.com https://github.com https://www.googletagmanager.com https://www.google-analytics.com",
       "font-src 'self' data:",
-      "connect-src 'self' ws: wss: https://avatars.githubusercontent.com",
+      "connect-src 'self' ws: wss: https://avatars.githubusercontent.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com https://region2.google-analytics.com https://analytics.google.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",
