@@ -7,9 +7,10 @@ import {
   Link2,
   MapPin,
 } from "lucide-react";
-import { GithubIcon, XIcon } from "./icons";
+import { XIcon } from "./icons";
 import { formatDate, formatFullNumber, timeAgo } from "@/lib/format";
 import type { ProfileResult } from "@/lib/types";
+import ShareButtons from "./ShareButtons";
 
 export default function ProfileHeader({
   result,
@@ -65,13 +66,9 @@ export default function ProfileHeader({
               last active {timeAgo(user.updated_at)}
             </p>
           </div>
-          <button
-            onClick={onShare}
-            className="mb-1 flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white/80 transition-all hover:border-aura-500/50 hover:text-white active:scale-[0.97]"
-            title="Copy a link to this analysis"
-          >
-            <GithubIcon className="h-4 w-4" /> Copy link
-          </button>
+          <div className="mb-1">
+            <ShareButtons username={user.login} onCopy={onShare} />
+          </div>
         </div>
 
         {user.bio ? (

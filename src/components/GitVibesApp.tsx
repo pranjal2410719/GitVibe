@@ -2,30 +2,42 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, Swords, User } from "lucide-react";
 import { GithubIcon } from "./icons";
 import type { ProfileResult } from "@/lib/types";
 import Background from "./Background";
 import SearchBar from "./SearchBar";
+import BattleSearch from "./BattleSearch";
 import RecentSearches, { clearRecent, loadRecent, saveRecent, type RecentSearch } from "./RecentSearches";
+import HallOfFame from "./HallOfFame";
+import { loadHall, saveHall, type HallEntry } from "@/lib/hall-of-fame";
 import LoadingState from "./LoadingState";
 import ErrorState, { type AppErrorCode } from "./ErrorState";
 import ProfileSections from "./ProfileSections";
+import CompareResults from "./CompareResults";
 
 type Status = "idle" | "loading" | "error" | "done";
+type Mode = "single" | "battle";
 
 interface AppError {
   code: AppErrorCode;
   message?: string;
 }
 
+const POPULAR = ["torvalds", "sindresorhus", "addyosmani", "gaearon", "jashkenas"];
+
 export default function GitVibesApp() {
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<ProfileResult | null>(null);
   const [error, setError] = useState<AppError | null>(null);
   const [recent, setRecent] = useState<RecentSearch[]>([]);
+  const [hall, setHall] = useState<HallEntry[]>([]);
   const [copied, setCopied] = useState(false);
   const [urlUsername, setUrlUsername] = useState("");
+  const [mode, setMode] = useState<Mode>("single");
+  const [battle, setBattle] = useState<{ left: ProfileResult; right: ProfileResult } | null>(null);
+  const [battleLoading, setBattleLoading] = useState(false);
+  const [battleError, setBattleError] = useState<string | null>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const lastQueryRef = useRef<string>("");
 
@@ -45,17 +57,71 @@ export default function GitVibesApp() {
       setStatus("done");
       saveRecent({ username: data.username, avatar: data.raw.user?.avatar_url ?? "", fetchedAt: Date.now() });
       setRecent(loadRecent());
+      saveHall({
+        username: data.username,
+        avatar: data.raw.user?.avatar_url ?? "",
+        aura: data.personality.scores.aura.value,
+        fetchedAt: Date.now(),
+      });
+      setHall(loadHall());
     } catch {
       setError({ code: "network" });
       setStatus("error");
     }
   }, []);
 
+  // Quick-pick from "try these" chips or the Hall of Fame always analyzes in single mode.
+  const handlePick = useCallback(
+    (username: string) => {
+      setMode("single");
+      void search(username);
+    },
+    [search],
+  );
+
+  const runBattle = useCallback(async (leftName: string, rightName: string) => {
+    setBattleLoading(true);
+    setBattleError(null);
+    try {
+      const [l, r] = await Promise.all([
+        fetch(`/api/profile/${encodeURIComponent(leftName)}`),
+        fetch(`/api/profile/${encodeURIComponent(rightName)}`),
+      ]);
+      const lj = (await l.json().catch(() => null)) as (ProfileResult & { error?: string }) | null;
+      const rj = (await r.json().catch(() => null)) as (ProfileResult & { error?: string }) | null;
+      if (!l.ok || !lj || !r.ok || !rj) {
+        const failing = !l.ok || !lj ? lj : rj;
+        setBattleError(failing?.error ?? "Couldn't load one of those profiles. Check both usernames and try again.");
+        setBattle(null);
+        return;
+      }
+      setBattle({ left: lj, right: rj });
+      const now = Date.now();
+      for (const p of [lj, rj]) {
+        saveRecent({ username: p.username, avatar: p.raw.user?.avatar_url ?? "", fetchedAt: now });
+        saveHall({
+          username: p.username,
+          avatar: p.raw.user?.avatar_url ?? "",
+          aura: p.personality.scores.aura.value,
+          fetchedAt: now,
+        });
+      }
+      setRecent(loadRecent());
+      setHall(loadHall());
+    } catch {
+      setBattleError("Network error while loading the battle. Try again.");
+      setBattle(null);
+    } finally {
+      setBattleLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    // One-time client-only mount init: hydrate recent searches from localStorage and
-    // honor a ?u= share link. These setStates run only on the first mount.
+    // One-time client-only mount init: hydrate recent searches and the hall of
+    // fame from localStorage, and honor a ?u= share link.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRecent(loadRecent());
+    setHall(loadHall());
     const u = new URLSearchParams(window.location.search).get("u");
     if (u) {
       setUrlUsername(u);
@@ -68,6 +134,12 @@ export default function GitVibesApp() {
       resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [status]);
+
+  useEffect(() => {
+    if (battle && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [battle]);
 
   const share = async () => {
     const url = `${window.location.origin}${window.location.pathname}?u=${result?.username ?? ""}`;
@@ -125,28 +197,89 @@ export default function GitVibesApp() {
           </p>
 
           <div className="mx-auto mt-8 w-full max-w-xl">
-            <SearchBar key={urlUsername} initialValue={urlUsername} loading={status === "loading"} onSearch={search} />
+            <div className="mb-3 flex justify-center">
+              <div className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 p-1 backdrop-blur-md">
+                <button
+                  onClick={() => setMode("single")}
+                  className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${
+                    mode === "single" ? "bg-white/10 text-white shadow" : "text-white/45 hover:text-white/75"
+                  }`}
+                >
+                  <User className="h-3.5 w-3.5" /> Single
+                </button>
+                <button
+                  onClick={() => setMode("battle")}
+                  className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all duration-200 ${
+                    mode === "battle" ? "bg-white/10 text-white shadow" : "text-white/45 hover:text-white/75"
+                  }`}
+                >
+                  <Swords className="h-3.5 w-3.5" /> VS Battle
+                </button>
+              </div>
+            </div>
+
+            {mode === "single" ? (
+              <SearchBar key={urlUsername} initialValue={urlUsername} loading={status === "loading"} onSearch={search} />
+            ) : (
+              <BattleSearch loading={battleLoading} onBattle={runBattle} />
+            )}
           </div>
 
           <div className="mx-auto mt-5 w-full max-w-2xl">
             <RecentSearches
               items={recent}
-              onPick={search}
+              onPick={handlePick}
               onClear={() => {
                 clearRecent();
                 setRecent([]);
               }}
             />
           </div>
+
+          {mode === "single" ? (
+            <div className="mx-auto mt-6 max-w-2xl">
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider text-white/35">Or try:</span>
+                {POPULAR.map((u) => (
+                  <button
+                    key={u}
+                    onClick={() => handlePick(u)}
+                    className="rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-sm font-medium text-white/70 transition-all duration-200 hover:border-aura-500/50 hover:bg-white/10 hover:text-white active:scale-[0.97]"
+                  >
+                    @{u}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </section>
 
+        {mode === "single" ? (
+          <div className="mx-auto mt-4 w-full max-w-2xl">
+            <HallOfFame items={hall} onPick={handlePick} />
+          </div>
+        ) : null}
+
         {status === "loading" ? <LoadingState /> : null}
+        {battleLoading ? <LoadingState /> : null}
+
+        {battleError ? (
+          <div className="card mx-auto mt-6 max-w-lg animate-pop p-6 text-center">
+            <p className="text-sm leading-relaxed text-white/60">{battleError}</p>
+          </div>
+        ) : null}
 
         {status === "error" && error ? (
           <ErrorState code={error.code} message={error.message} onRetry={() => lastQueryRef.current && search(lastQueryRef.current)} />
         ) : null}
 
-        {status === "done" && result ? (
+        {mode === "battle" && battle ? (
+          <div ref={resultsRef} className="scroll-mt-6">
+            <CompareResults left={battle.left} right={battle.right} />
+          </div>
+        ) : null}
+
+        {mode === "single" && status === "done" && result ? (
           <div ref={resultsRef} className="scroll-mt-6">
             <ProfileSections result={result} onShare={share} />
           </div>
