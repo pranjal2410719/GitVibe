@@ -255,7 +255,7 @@ export default function GitVibesApp() {
         </section>
 
         {mode === "single" ? (
-          <div className="mx-auto mt-4 w-full max-w-2xl">
+          <div className="mx-auto mb-12 mt-10 w-full max-w-2xl">
             <HallOfFame items={hall} onPick={handlePick} />
           </div>
         ) : null}
