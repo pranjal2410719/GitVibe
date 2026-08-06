@@ -118,8 +118,8 @@ export default function GitVibesApp() {
             <span className="text-gradient">Get their entire vibe.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-white/55 sm:text-base">
-            A playful personality breakdown of any public profile — aura, chaos, energy, traits, a recruiter
-            report, a roast, and a shareable identity card. All from live GitHub data.
+            Turn public commits into custom personality profiles — check your developer aura, track language
+            vibes, and get roasted by your own code activity.
           </p>
 
           <div className="mx-auto mt-8 w-full max-w-xl">

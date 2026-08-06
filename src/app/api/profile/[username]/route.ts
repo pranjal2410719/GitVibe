@@ -22,6 +22,35 @@ const USERNAME_RE = /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/;
 const cache = new Map<string, { result: ProfileResult; at: number }>();
 const inflight = new Map<string, Promise<ProfileResult>>();
 
+/* ------------------------------ rate limiting ------------------------------ */
+
+// Simple in-memory sliding-window limiter per client IP. Serverless instances
+// are ephemeral, so this is per-instance protection (not a global quota) — it
+// raises the bar against casual abuse, while GitHub's own limits stay the hard
+// cap. Values are deliberately generous so normal browsing is never affected.
+const RATE = { windowMs: 60_000, max: 30 };
+const hits = new Map<string, number[]>();
+
+function clientIp(req: Request): string {
+  const fwd = req.headers.get("x-forwarded-for");
+  if (fwd) return fwd.split(",")[0].trim();
+  return req.headers.get("x-real-ip") ?? "unknown";
+}
+
+function isRateLimited(key: string): boolean {
+  const now = Date.now();
+  const recent = (hits.get(key) ?? []).filter((t) => now - t < RATE.windowMs);
+  recent.push(now);
+  hits.set(key, recent);
+  // Opportunistic cleanup so the map can't grow unbounded.
+  if (hits.size > 10_000) {
+    for (const [k, ts] of hits) {
+      if (ts.every((t) => now - t >= RATE.windowMs)) hits.delete(k);
+    }
+  }
+  return recent.length > RATE.max;
+}
+
 class GitHubError extends Error {
   status: number;
   constructor(status: number, message: string) {
@@ -110,6 +139,15 @@ export async function GET(
 ) {
   const { username } = await context.params;
   const u = username.toLowerCase();
+
+  // Rate-limit first so even invalid-username spam is throttled (it never
+  // reaches GitHub, but it should still not be free to hammer us).
+  if (isRateLimited(clientIp(_req))) {
+    return NextResponse.json(
+      { error: "Too many requests. Take a breath and try again in a minute.", code: "rate_limit" },
+      { status: 429, headers: { "Retry-After": "60" } },
+    );
+  }
 
   if (!USERNAME_RE.test(u) || u.length > 39) {
     return NextResponse.json(

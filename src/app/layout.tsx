@@ -21,14 +21,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GitVibes — Developer Personality Lab",
+  title: "GitVibe — Developer Personality Lab",
   description:
-    "Type any public GitHub username and get a playful personality breakdown: aura, chaos, energy, traits, recruiter impressions, a roast, and a shareable identity card.",
-  keywords: ["github", "personality", "developer", "profile", "analysis", "aura"],
+    "Turn public commits into custom personality profiles. Check your developer aura, track language vibes, and get roasted by your own code activity.",
+  keywords: ["github", "personality", "developer", "profile", "analysis", "aura", "vibes"],
   openGraph: {
-    title: "GitVibes — Developer Personality Lab",
+    title: "GitVibe — Developer Personality Lab",
     description:
-      "A playful personality breakdown for any public GitHub profile. Aura, chaos, energy and a roast, all from live GitHub data.",
+      "Turn public commits into custom personality profiles — aura, chaos, energy, traits, a recruiter report, and a roast, all from live GitHub data.",
     type: "website",
   },
   icons: {
