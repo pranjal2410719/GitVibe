@@ -1,0 +1,8 @@
+[build]
+  command = "npm run build"
+
+# Netlify auto-detects Next.js, applies its Next.js build plugin, and handles
+# the publish directory — no publish dir or plugin block needed here.
+#
+# Optional: raise the GitHub API rate limit from 60 to 5,000 req/hr by adding
+# a GITHUB_TOKEN environment variable in Site settings → Environment variables.
