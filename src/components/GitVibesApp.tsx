@@ -98,21 +98,23 @@ export default function GitVibesApp() {
             href="https://github.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/70 transition-colors hover:border-white/20 hover:text-white"
+            className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/70 transition-colors hover:border-white/20 hover:text-white xs:px-4"
+            aria-label="Powered by GitHub"
           >
-            <GithubIcon className="h-4 w-4" /> Powered by GitHub
+            <GithubIcon className="h-4 w-4" />
+            <span className="hidden xs:inline">Powered by GitHub</span>
           </a>
         </nav>
       </header>
 
       <main className="mx-auto w-full max-w-5xl px-4 pb-20 sm:px-6">
         <section className="py-8 text-center sm:py-12">
-          <div className="mx-auto mb-4 flex max-w-md items-center gap-3 text-xs font-medium uppercase tracking-[0.25em] text-white/40">
+          <div className="mx-auto mb-4 flex max-w-md items-center gap-3 text-xs font-medium uppercase tracking-[0.18em] text-white/40 sm:tracking-[0.25em]">
             <span className="h-px flex-1 bg-white/10" />
             Developer Personality Lab
             <span className="h-px flex-1 bg-white/10" />
           </div>
-          <h1 className="font-display text-4xl font-bold leading-tight tracking-tight sm:text-6xl">
+          <h1 className="font-display text-3xl font-bold leading-tight tracking-tight xs:text-4xl sm:text-6xl">
             Type a GitHub username.
             <br />
             <span className="text-gradient">Get their entire vibe.</span>

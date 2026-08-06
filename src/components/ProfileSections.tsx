@@ -33,7 +33,9 @@ export default function ProfileSections({
       </Reveal>
 
       <Reveal delay={60}>
-        <div className="grid gap-5 lg:grid-cols-2">
+        {/* min-w-0 on grid items lets cards with scrollable/truncated content (heatmap,
+            repo rows) shrink to the column instead of stretching the page on mobile */}
+        <div className="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
           <RepoHighlights repos={raw.repos} total={stats.repoCount} />
           <LanguageChart stats={stats} />
         </div>
@@ -41,7 +43,7 @@ export default function ProfileSections({
 
       {raw.contributions?.contributions?.length ? (
         <Reveal delay={60}>
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
             <ContributionHeatmap
               days={raw.contributions.contributions}
               streak={stats.contributions!}

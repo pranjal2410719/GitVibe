@@ -86,6 +86,9 @@ export default function IdentityCard({ result }: { result: ProfileResult }) {
           </p>
         ) : null}
 
+        <p className="mb-2 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-white/25 sm:hidden">
+          ← swipe to preview the full card →
+        </p>
         {/* The card — fixed width, self-contained gradients, no backdrop filters */}
         <div className="overflow-x-auto pb-2 no-scrollbar">
           <div className="mx-auto w-full" style={{ maxWidth: CARD_WIDTH }}>

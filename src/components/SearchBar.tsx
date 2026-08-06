@@ -50,6 +50,7 @@ export default function SearchBar({
           }}
           placeholder="e.g. torvalds, sindresorhus, or you"
           aria-label="GitHub username"
+          name="username"
           autoCapitalize="none"
           autoCorrect="off"
           spellCheck={false}

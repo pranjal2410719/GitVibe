@@ -68,6 +68,9 @@ export default function ContributionHeatmap({
         </span>
       }
     >
+      <p className="mb-2 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-white/25 sm:hidden">
+        ← drag to scroll →
+      </p>
       <div className="overflow-x-auto pb-2 no-scrollbar">
         <div className="inline-block">
           <div className="relative mb-1 h-4 text-[10px] font-medium text-white/35">

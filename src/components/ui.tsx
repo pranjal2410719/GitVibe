@@ -18,7 +18,7 @@ export function Section({
 }) {
   return (
     <section className={`card p-5 sm:p-6 ${className}`}>
-      <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
         <div>
           <h2 className="flex items-center gap-2 font-display text-lg font-semibold tracking-tight text-white">
             <span className="text-xl" aria-hidden>
