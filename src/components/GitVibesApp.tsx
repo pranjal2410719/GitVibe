@@ -146,25 +146,6 @@ export default function GitVibesApp() {
           <ErrorState code={error.code} message={error.message} onRetry={() => lastQueryRef.current && search(lastQueryRef.current)} />
         ) : null}
 
-        {status === "idle" ? (
-          <div className="mx-auto mt-6 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
-            {[
-              { emoji: "🔮", label: "Archetype" },
-              { emoji: "🌪️", label: "Chaos score" },
-              { emoji: "🔥", label: "The roast" },
-              { emoji: "🪪", label: "Identity card" },
-            ].map((f) => (
-              <div
-                key={f.label}
-                className="card flex flex-col items-center gap-1.5 px-3 py-5 text-center transition-transform duration-200 hover:-translate-y-0.5"
-              >
-                <span className="text-2xl">{f.emoji}</span>
-                <span className="text-xs font-medium text-white/60">{f.label}</span>
-              </div>
-            ))}
-          </div>
-        ) : null}
-
         {status === "done" && result ? (
           <div ref={resultsRef} className="scroll-mt-6">
             <ProfileSections result={result} onShare={share} />
