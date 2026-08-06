@@ -5,7 +5,10 @@ import type { ContributionDay, ContributionStreakInfo } from "@/lib/types";
 import { Section } from "./ui";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const CELL = 11;
+// The heatmap now spans the full card width on desktop, so the cells can be a
+// touch larger than GitHub's 11px for a cleaner look. All positioning math is
+// derived from CELL, so changing it scales the whole grid consistently.
+const CELL = 12;
 const GAP = 3;
 const GUTTER = CELL + 4; // day-label column width (cell + its right margin)
 

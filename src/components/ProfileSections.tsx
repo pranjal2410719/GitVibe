@@ -43,7 +43,10 @@ export default function ProfileSections({
 
       {raw.contributions?.contributions?.length ? (
         <Reveal delay={60}>
-          <div className="grid gap-5 lg:grid-cols-2 [&>*]:min-w-0">
+          {/* The calendar is the widest element on the page — give it the full
+              card width so the month labels and cells aren't cramped into a
+              half column on desktop. Activity stacks below it. */}
+          <div className="space-y-5">
             <ContributionHeatmap
               days={raw.contributions.contributions}
               streak={stats.contributions!}
