@@ -72,9 +72,21 @@ export function SuggestionDropdown({
   return (
     <div className="absolute left-0 right-0 top-full z-30 mt-2 overflow-hidden rounded-xl border border-white/10 bg-ink-800/95 shadow-2xl backdrop-blur-xl animate-pop">
       {loading ? (
-        <p className="flex items-center gap-2 px-4 py-3 text-sm text-white/50">
-          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Searching GitHub…
-        </p>
+        <div className="px-4 py-3" role="status" aria-live="polite">
+          <p className="mb-2 flex items-center gap-2 text-xs font-medium text-white/45">
+            <Loader2 className="h-3 w-3 animate-spin" /> Searching GitHub…
+          </p>
+          {/* Skeleton rows mirroring the real suggestion items: circular avatar
+              placeholder + username bar, shimmering while the query runs. */}
+          <div className="space-y-1">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center gap-3 px-1 py-1.5">
+                <div className="h-6 w-6 shrink-0 animate-shimmer rounded-full bg-[linear-gradient(90deg,rgb(255_255_255/0.04)_25%,rgb(255_255_255/0.09)_50%,rgb(255_255_255/0.04)_75%)] bg-[length:200%_100%]" />
+                <div className="h-3.5 w-28 animate-shimmer rounded-md bg-[linear-gradient(90deg,rgb(255_255_255/0.04)_25%,rgb(255_255_255/0.09)_50%,rgb(255_255_255/0.04)_75%)] bg-[length:200%_100%]" />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
         <ul role="listbox" aria-label="GitHub username suggestions">
           {suggestions.map((s) => (

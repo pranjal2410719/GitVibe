@@ -12,6 +12,7 @@ import RecentSearches, { clearRecent, loadRecent, saveRecent, type RecentSearch 
 import HallOfFame from "./HallOfFame";
 import { loadHall, saveHall, type HallEntry } from "@/lib/hall-of-fame";
 import LoadingState from "./LoadingState";
+import ProfileSkeleton from "./ProfileSkeleton";
 import ErrorState, { type AppErrorCode } from "./ErrorState";
 import ProfileSections from "./ProfileSections";
 import CompareResults from "./CompareResults";
@@ -38,6 +39,14 @@ export default function GitVibesApp() {
   const [battle, setBattle] = useState<{ left: ProfileResult; right: ProfileResult } | null>(null);
   const [battleLoading, setBattleLoading] = useState(false);
   const [battleError, setBattleError] = useState<string | null>(null);
+  // When false, the profile skeleton stays on screen until the avatar image
+  // has finished downloading (so the header never pops in half-drawn).
+  const [mediaReady, setMediaReady] = useState(true);
+  const mediaTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Guards against stale preload handlers: each search bumps this, so an
+  // avatar that finishes loading from an earlier search can't flip mediaReady
+  // for the current one.
+  const avatarSeqRef = useRef(0);
   const resultsRef = useRef<HTMLDivElement>(null);
   const lastQueryRef = useRef<string>("");
 
@@ -45,16 +54,46 @@ export default function GitVibesApp() {
     lastQueryRef.current = username;
     setStatus("loading");
     setError(null);
+    // Invalidate any in-flight avatar preload from a previous search.
+    const seq = ++avatarSeqRef.current;
+    if (mediaTimerRef.current) clearTimeout(mediaTimerRef.current);
+    setMediaReady(false);
     try {
       const res = await fetch(`/api/profile/${encodeURIComponent(username)}`);
       const data = (await res.json()) as ProfileResult & { error?: string; code?: AppErrorCode };
       if (!res.ok) {
         setError({ code: data.code ?? "internal", message: data.error });
         setStatus("error");
+        setMediaReady(true);
         return;
       }
       setResult(data);
       setStatus("done");
+      // Keep the skeleton visible until the avatar image is fully loaded too.
+      // The image is preloaded into the browser cache, so the real <img> in
+      // the header renders instantly when the skeleton swaps out. A timeout
+      // guarantees the swap always happens even if the image stalls.
+      const avatarUrl = data.raw.user?.avatar_url ?? "";
+      if (avatarUrl) {
+        const timer = setTimeout(() => {
+          if (seq === avatarSeqRef.current) setMediaReady(true);
+        }, 8000);
+        mediaTimerRef.current = timer;
+        const img = new Image();
+        img.onload = () => {
+          if (seq !== avatarSeqRef.current) return;
+          clearTimeout(timer);
+          setMediaReady(true);
+        };
+        img.onerror = () => {
+          if (seq !== avatarSeqRef.current) return;
+          clearTimeout(timer);
+          setMediaReady(true);
+        };
+        img.src = avatarUrl;
+      } else {
+        setMediaReady(true);
+      }
       saveRecent({ username: data.username, avatar: data.raw.user?.avatar_url ?? "", fetchedAt: Date.now() });
       setRecent(loadRecent());
       saveHall({
@@ -130,10 +169,17 @@ export default function GitVibesApp() {
   }, [search]);
 
   useEffect(() => {
-    if (status === "done" && resultsRef.current) {
+    if (status === "done" && mediaReady && resultsRef.current) {
       resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, [status]);
+  }, [status, mediaReady]);
+
+  // Clear any pending avatar preload timer on unmount.
+  useEffect(() => {
+    return () => {
+      if (mediaTimerRef.current) clearTimeout(mediaTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (battle && resultsRef.current) {
@@ -260,7 +306,7 @@ export default function GitVibesApp() {
           </div>
         ) : null}
 
-        {status === "loading" ? <LoadingState /> : null}
+        {status === "loading" ? <ProfileSkeleton /> : null}
         {battleLoading ? <LoadingState /> : null}
 
         {battleError ? (
@@ -281,7 +327,7 @@ export default function GitVibesApp() {
 
         {mode === "single" && status === "done" && result ? (
           <div ref={resultsRef} className="scroll-mt-6">
-            <ProfileSections result={result} onShare={share} />
+            {mediaReady ? <ProfileSections result={result} onShare={share} /> : <ProfileSkeleton />}
           </div>
         ) : null}
 
