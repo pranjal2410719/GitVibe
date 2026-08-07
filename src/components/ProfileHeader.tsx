@@ -41,7 +41,7 @@ export default function ProfileHeader({
             alt={`${user.login}'s avatar`}
             width={112}
             height={112}
-            className="h-24 w-24 rounded-2xl border-4 border-ink-900 object-cover shadow-2xl sm:h-28 sm:w-28"
+            className="h-24 w-24 rounded-full border-4 border-ink-900 object-cover shadow-2xl sm:h-28 sm:w-28"
           />
           <div className="min-w-0 flex-1 pb-1">
             <div className="flex flex-wrap items-center gap-2">

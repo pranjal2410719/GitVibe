@@ -131,7 +131,7 @@ export default function IdentityCard({ result }: { result: ProfileResult }) {
                       crossOrigin="anonymous"
                       width={104}
                       height={104}
-                      className="h-[104px] w-[104px] rounded-2xl object-cover ring-2 ring-white/20"
+                      className="h-[104px] w-[104px] rounded-full object-cover ring-2 ring-white/20"
                       style={{ border: "3px solid rgb(255 255 255 / 0.15)" }}
                     />
                     <div>

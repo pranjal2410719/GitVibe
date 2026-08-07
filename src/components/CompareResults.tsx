@@ -35,7 +35,7 @@ function FighterCard({ result, isWinner }: { result: ProfileResult; isWinner: bo
           alt={`${user.login}'s avatar`}
           width={56}
           height={56}
-          className="h-14 w-14 shrink-0 rounded-2xl object-cover ring-2 ring-white/15"
+          className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-white/15"
         />
         <div className="min-w-0">
           <p className="truncate font-display text-lg font-bold text-white">{user.name ?? user.login}</p>
