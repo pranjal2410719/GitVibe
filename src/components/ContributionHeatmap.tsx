@@ -1,16 +1,19 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Flame } from "lucide-react";
 import type { ContributionDay, ContributionStreakInfo } from "@/lib/types";
 import { Section } from "./ui";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-// The heatmap now spans the full card width on desktop, so the cells can be a
-// touch larger than GitHub's 11px for a cleaner look. All positioning math is
-// derived from CELL, so changing it scales the whole grid consistently.
-const CELL = 12;
+// The heatmap now spans the full card width on desktop: the cell size is
+// computed from the available width (see the ResizeObserver below) so the grid
+// stretches edge-to-edge instead of sitting at a fixed pixel width. GAP and the
+// day-label gutter scale along with the cell, keeping every piece aligned.
+const MIN_CELL = 9;
+const MAX_CELL = 15;
 const GAP = 3;
-const GUTTER = CELL + 4; // day-label column width (cell + its right margin)
+const GUTTER = 4; // extra px beside the cell for the day-label column
 
 function colorFor(count: number): string {
   if (count <= 0) return "#161b22";
@@ -58,7 +61,26 @@ export default function ContributionHeatmap({
   days: ContributionDay[];
   streak: ContributionStreakInfo;
 }) {
-  const { weeks, monthLabels } = buildWeeks(days);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const { weeks, monthLabels } = useMemo(() => buildWeeks(days), [days]);
+  const [cell, setCell] = useState(MAX_CELL);
+
+  useEffect(() => {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const update = () => {
+      const available = wrap.clientWidth;
+      if (available <= 0) return;
+      const n = weeks.length;
+      // available = gutter + n*cell + (n-1)*gap  →  cell = (available - gutter - (n-1)*gap) / n
+      const next = Math.floor((available - GUTTER - (n - 1) * GAP) / n);
+      setCell(Math.min(MAX_CELL, Math.max(MIN_CELL, next)));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, [weeks.length]);
 
   return (
     <Section
@@ -74,12 +96,12 @@ export default function ContributionHeatmap({
       <p className="mb-2 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-white/25 sm:hidden">
         ← drag to scroll →
       </p>
-      <div className="overflow-x-auto pb-2 no-scrollbar">
+      <div ref={wrapRef} className="overflow-x-auto pb-2 no-scrollbar">
         <div className="inline-block">
           <div className="relative mb-1 h-4 text-[10px] font-medium text-white/35">
             {monthLabels.map((m) => (
               // +GUTTER aligns labels with the weeks grid that follows the day-label column
-              <span key={m.index} className="absolute" style={{ left: GUTTER + m.index * (CELL + GAP) }}>
+              <span key={m.index} className="absolute" style={{ left: cell + GUTTER + m.index * (cell + GAP) }}>
                 {m.label}
               </span>
             ))}
@@ -87,7 +109,7 @@ export default function ContributionHeatmap({
           <div className="flex gap-[3px]">
             <div className="mr-1 flex flex-col gap-[3px] text-[9px] text-white/35">
               {DAY_LABELS.map((d, i) => (
-                <span key={i} style={{ height: CELL }} className="leading-[11px]">
+                <span key={i} style={{ height: cell }} className="leading-[11px]">
                   {d}
                 </span>
               ))}
@@ -99,7 +121,7 @@ export default function ContributionHeatmap({
                     key={d.date}
                     title={`${d.date}: ${d.count} contribution${d.count === 1 ? "" : "s"}`}
                     className="rounded-[2px] ring-1 ring-inset ring-white/[0.06]"
-                    style={{ width: CELL, height: CELL, backgroundColor: colorFor(d.count) }}
+                    style={{ width: cell, height: cell, backgroundColor: colorFor(d.count) }}
                   />
                 ))}
               </div>
@@ -108,7 +130,7 @@ export default function ContributionHeatmap({
           <div className="mt-2 flex items-center justify-end gap-1.5 text-[10px] text-white/35">
             Less
             {[0, 2, 5, 8, 12].map((c) => (
-              <span key={c} className="rounded-[2px]" style={{ width: CELL, height: CELL, backgroundColor: colorFor(c) }} />
+              <span key={c} className="rounded-[2px]" style={{ width: cell, height: cell, backgroundColor: colorFor(c) }} />
             ))}
             More
           </div>

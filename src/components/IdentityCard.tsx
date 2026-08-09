@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download, Loader2, Sparkles } from "lucide-react";
 import { domToPng } from "modern-screenshot";
 import { languageColor } from "@/lib/language-colors";
@@ -12,8 +12,29 @@ const CARD_WIDTH = 1080;
 
 export default function IdentityCard({ result }: { result: ProfileResult }) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const cardScaleRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // On small screens the 1080px card is scaled down (transform, not layout)
+  // to fit the container — so the design never reflows or cramples, and the
+  // exported PNG still captures the full 1080px layout.
+  const [scale, setScale] = useState(1);
+  const [scaledHeight, setScaledHeight] = useState(0);
+
+  useEffect(() => {
+    const wrap = cardScaleRef.current;
+    const card = cardRef.current;
+    if (!wrap || !card) return;
+    const update = () => {
+      const available = wrap.clientWidth;
+      setScale(Math.min(1, available / CARD_WIDTH));
+      setScaledHeight(card.offsetHeight * Math.min(1, available / CARD_WIDTH));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(wrap);
+    return () => ro.disconnect();
+  }, []);
 
   const { raw, stats, personality } = result;
   const user = raw.user;
@@ -27,15 +48,14 @@ export default function IdentityCard({ result }: { result: ProfileResult }) {
     if (!node || exporting) return;
     setExporting(true);
     setError(null);
-    const prevWidth = node.style.width;
-    const prevMaxWidth = node.style.maxWidth;
+    const prevTransform = node.style.transform;
+    const prevOrigin = node.style.transformOrigin;
     try {
       await document.fonts.ready;
-      // Pin the card to its 1080px design width during capture. The on-page
-      // card is fluid (maxWidth 100%), so without this the exported PNG would
-      // shrink with the viewport and text would reflow into a cramped layout.
-      node.style.width = "1080px";
-      node.style.maxWidth = "none";
+      // Drop the on-page scale so the capture is the un-transformed 1080px
+      // design — identical on every device.
+      node.style.transform = "none";
+      node.style.transformOrigin = "top left";
       const dataUrl = await domToPng(node, {
         scale: 3,
         fetch: { requestInit: { mode: "cors" } },
@@ -50,8 +70,8 @@ export default function IdentityCard({ result }: { result: ProfileResult }) {
       console.error("Card export failed", e);
       setError("Export failed. Try again, or use a different browser.");
     } finally {
-      node.style.width = prevWidth;
-      node.style.maxWidth = prevMaxWidth;
+      node.style.transform = prevTransform;
+      node.style.transformOrigin = prevOrigin;
       setExporting(false);
     }
   }
@@ -86,22 +106,26 @@ export default function IdentityCard({ result }: { result: ProfileResult }) {
           </p>
         ) : null}
 
-        <p className="mb-2 text-right text-[10px] font-semibold uppercase tracking-[0.18em] text-white/25 sm:hidden">
-          ← swipe to preview the full card →
-        </p>
-        {/* The card — fixed width, self-contained gradients, no backdrop filters */}
-        <div className="overflow-x-auto pb-2 no-scrollbar">
-          <div className="mx-auto w-full" style={{ maxWidth: CARD_WIDTH }}>
+        {/* The card — always laid out at its fixed 1080px design width so the
+            design never reflows or cramples. On small screens it is scaled
+            down with a transform to fit, and the exported PNG is captured at
+            the full 1080px (transform removed during export). */}
+        <div ref={cardScaleRef} className="w-full">
+          <div className="relative w-full" style={{ height: scaledHeight || undefined }}>
             <div
               ref={cardRef}
               data-card-root
               style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
                 width: CARD_WIDTH,
-                maxWidth: "100%",
+                transform: `scale(${scale})`,
+                transformOrigin: "top left",
                 backgroundColor: "#0b0d15",
                 fontFamily: "var(--font-inter), ui-sans-serif, system-ui, sans-serif",
               }}
-              className="relative overflow-hidden rounded-3xl ring-1 ring-white/15 shadow-2xl"
+              className="overflow-hidden rounded-3xl ring-1 ring-white/15 shadow-2xl"
             >
               {/* backgrounds */}
               <div
