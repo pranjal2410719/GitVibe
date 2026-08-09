@@ -26,7 +26,7 @@ export default function ProfileSections({
     <div className="w-full space-y-5">
       <ProfileHeader result={result} onShare={onShare} />
 
-      <ScoreCards scores={personality.scores} />
+      <ScoreCards scores={personality.scores} stats={stats} />
 
       <Reveal delay={60}>
         <ArchetypeCard personality={personality} />
