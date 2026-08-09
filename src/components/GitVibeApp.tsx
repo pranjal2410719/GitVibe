@@ -16,6 +16,7 @@ import ProfileSkeleton from "./ProfileSkeleton";
 import ErrorState, { type AppErrorCode } from "./ErrorState";
 import ProfileSections from "./ProfileSections";
 import CompareResults from "./CompareResults";
+import { POPULAR_USERS } from "@/lib/popular-users";
 
 type Status = "idle" | "loading" | "error" | "done";
 type Mode = "single" | "battle";
@@ -25,9 +26,8 @@ interface AppError {
   message?: string;
 }
 
-const POPULAR = ["torvalds", "sindresorhus", "addyosmani", "gaearon", "jashkenas"];
-
-export default function GitVibesApp() {
+export default function GitVibeApp({ initialUsername = "" }: { initialUsername?: string }) {
+  const embedded = Boolean(initialUsername);
   const [status, setStatus] = useState<Status>("idle");
   const [result, setResult] = useState<ProfileResult | null>(null);
   const [error, setError] = useState<AppError | null>(null);
@@ -157,16 +157,17 @@ export default function GitVibesApp() {
 
   useEffect(() => {
     // One-time client-only mount init: hydrate recent searches and the hall of
-    // fame from localStorage, and honor a ?u= share link.
+    // fame from localStorage. Search for an initialUsername passed by a
+    // server-rendered /u/[username] page, falling back to a ?u= share link.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setRecent(loadRecent());
     setHall(loadHall());
-    const u = new URLSearchParams(window.location.search).get("u");
+    const u = initialUsername || new URLSearchParams(window.location.search).get("u");
     if (u) {
       setUrlUsername(u);
       void search(u);
     }
-  }, [search]);
+  }, [initialUsername, search]);
 
   useEffect(() => {
     if (status === "done" && mediaReady && resultsRef.current) {
@@ -188,7 +189,10 @@ export default function GitVibesApp() {
   }, [battle]);
 
   const share = async () => {
-    const url = `${window.location.origin}${window.location.pathname}?u=${result?.username ?? ""}`;
+    const username = result?.username ?? "";
+    const url = embedded
+      ? `${window.location.origin}/u/${encodeURIComponent(username)}`
+      : `${window.location.origin}${window.location.pathname}?u=${username}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -226,7 +230,8 @@ export default function GitVibesApp() {
       </header>
 
       <main className="mx-auto w-full max-w-5xl px-4 pb-20 sm:px-6">
-        <section className="py-8 text-center sm:py-12">
+        {!embedded ? (
+          <section className="py-8 text-center sm:py-12">
           <div className="mx-auto mb-4 flex max-w-md items-center gap-3 text-xs font-medium uppercase tracking-[0.18em] text-white/40 sm:tracking-[0.25em]">
             <span className="h-px flex-1 bg-white/10" />
             Developer Personality Lab
@@ -286,7 +291,7 @@ export default function GitVibesApp() {
             <div className="mx-auto mt-6 max-w-2xl">
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <span className="text-xs font-semibold uppercase tracking-wider text-white/35">Or try:</span>
-                {POPULAR.map((u) => (
+                {POPULAR_USERS.map((u) => (
                   <button
                     key={u}
                     onClick={() => handlePick(u)}
@@ -299,8 +304,9 @@ export default function GitVibesApp() {
             </div>
           ) : null}
         </section>
+        ) : null}
 
-        {mode === "single" ? (
+        {mode === "single" && !embedded ? (
           <div className="mx-auto mb-12 mt-10 w-full max-w-2xl">
             <HallOfFame items={hall} onPick={handlePick} />
           </div>
@@ -327,7 +333,7 @@ export default function GitVibesApp() {
 
         {mode === "single" && status === "done" && result ? (
           <div ref={resultsRef} className="scroll-mt-6">
-            {mediaReady ? <ProfileSections result={result} onShare={share} /> : <ProfileSkeleton />}
+            {mediaReady ? <ProfileSections result={result} onShare={share} titleAs={embedded ? "h2" : "h1"} /> : <ProfileSkeleton />}
           </div>
         ) : null}
 
@@ -340,7 +346,7 @@ export default function GitVibesApp() {
 
       <footer className="border-t border-white/8 py-6">
         <p className="text-center text-xs text-white/30">
-          GitVibes is a fan-made experiment. Not affiliated with GitHub — and vibe analysis is not career advice. · Made with 💜 and caffeine
+          GitVibe is a fan-made experiment. Not affiliated with GitHub — and vibe analysis is not career advice. · Made with 💜 and caffeine
         </p>
       </footer>
     </div>

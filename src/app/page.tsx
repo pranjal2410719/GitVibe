@@ -1,5 +1,5 @@
-import GitVibesApp from "@/components/GitVibesApp";
+import GitVibeApp from "@/components/GitVibeApp";
 
 export default function Home() {
-  return <GitVibesApp />;
+  return <GitVibeApp />;
 }

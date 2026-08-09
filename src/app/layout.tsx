@@ -27,15 +27,53 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GitVibe — Developer Personality Lab",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://gitvibe.netlify.app",
+  ),
+  title: {
+    default: "GitVibe — Developer Personality Lab",
+    template: "%s | GitVibe",
+  },
   description:
     "Turn public commits into custom personality profiles. Check your developer aura, track language vibes, and get roasted by your own code activity.",
-  keywords: ["github", "personality", "developer", "profile", "analysis", "aura", "vibes"],
+  keywords: [
+    "github profile analyzer",
+    "github personality analyzer",
+    "github aura",
+    "developer personality",
+    "github stats",
+    "coding personality",
+    "github contribution analyzer",
+    "developer aura",
+    "github activity analyzer",
+    "github",
+    "personality",
+    "profile",
+    "analysis",
+  ],
+  applicationName: "GitVibe",
+  category: "developer",
+  authors: [{ name: "Pranjal Yadav", url: "https://github.com/pranjal2410719" }],
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   openGraph: {
     title: "GitVibe — Developer Personality Lab",
     description:
       "Turn public commits into custom personality profiles — aura, chaos, energy, traits, a recruiter report, and a roast, all from live GitHub data.",
     type: "website",
+    siteName: "GitVibe",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GitVibe — Developer Personality Lab",
+    description:
+      "Turn public commits into custom personality profiles — aura, chaos, energy, traits, a recruiter report, and a roast.",
   },
   icons: {
     icon: "/icon.svg",
@@ -57,6 +95,10 @@ export default function RootLayout({
       className={`${inter.variable} ${spaceGrotesk.variable} ${geistMono.variable} h-full antialiased`}
     >
       <head>
+        {/* Connection hints for the third-party APIs the app depends on */}
+        <link rel="preconnect" href="https://api.github.com" />
+        <link rel="preconnect" href="https://avatars.githubusercontent.com" />
+        <link rel="preconnect" href="https://github-contributions-api.jogruber.de" />
         {/* Google tag (gtag.js) — loaded once per page, after hydration */}
         <Script
           id="google-analytics"

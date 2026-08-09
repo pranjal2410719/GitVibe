@@ -7,7 +7,7 @@ export interface HallEntry {
   fetchedAt: number;
 }
 
-const STORAGE_KEY = "gitvibes:hall";
+const STORAGE_KEY = "gitvibe:hall";
 export const HALL_LIMIT = 20;
 
 /** Load the device-local Hall of Fame, sorted by aura (highest first). */

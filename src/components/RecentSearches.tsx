@@ -8,7 +8,7 @@ export interface RecentSearch {
   fetchedAt: number;
 }
 
-const STORAGE_KEY = "gitvibes:recent";
+const STORAGE_KEY = "gitvibe:recent";
 export const RECENT_LIMIT = 8;
 
 export function loadRecent(): RecentSearch[] {

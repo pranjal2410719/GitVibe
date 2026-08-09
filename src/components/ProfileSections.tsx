@@ -16,15 +16,17 @@ import IdentityCard from "./IdentityCard";
 export default function ProfileSections({
   result,
   onShare,
+  titleAs = "h1",
 }: {
   result: ProfileResult;
   onShare: () => void;
+  titleAs?: "h1" | "h2";
 }) {
   const { raw, stats, personality } = result;
 
   return (
     <div className="w-full space-y-5">
-      <ProfileHeader result={result} onShare={onShare} />
+      <ProfileHeader result={result} onShare={onShare} titleAs={titleAs} />
 
       <ScoreCards scores={personality.scores} stats={stats} />
 

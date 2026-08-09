@@ -15,9 +15,11 @@ import ShareButtons from "./ShareButtons";
 export default function ProfileHeader({
   result,
   onShare,
+  titleAs = "h1",
 }: {
   result: ProfileResult;
   onShare: () => void;
+  titleAs?: "h1" | "h2";
 }) {
   const { raw, stats } = result;
   const user = raw.user;
@@ -45,9 +47,15 @@ export default function ProfileHeader({
           />
           <div className="min-w-0 flex-1 pb-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
-                {user.name ?? user.login}
-              </h1>
+              {titleAs === "h2" ? (
+                <h2 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                  {user.name ?? user.login}
+                </h2>
+              ) : (
+                <h1 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                  {user.name ?? user.login}
+                </h1>
+              )}
               <a
                 href={user.html_url}
                 target="_blank"

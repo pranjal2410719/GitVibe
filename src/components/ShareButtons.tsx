@@ -10,8 +10,8 @@ export default function ShareButtons({
   username: string;
   onCopy: () => void;
 }) {
-  const shareUrl = () => `${window.location.origin}/?u=${encodeURIComponent(username)}`;
-  const text = `I checked @${username}'s developer aura on GitVibes — the whole personality profile, roasted. `;
+  const shareUrl = () => `${window.location.origin}/u/${encodeURIComponent(username)}`;
+  const text = `I checked @${username}'s developer aura on GitVibe — the whole personality profile, roasted. `;
 
   const open = (href: string) => (e: React.MouseEvent) => {
     e.preventDefault();
