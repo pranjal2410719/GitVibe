@@ -1,30 +1,6 @@
 # DSA Practice & Build Activity Log
 
 
-## [2026-08-19 04:15:08 UTC] feat(dsa/trees): implement Binary Search Tree deletion and auto-rebalancing logic
-
-**Module:** `dsa/trees`  
-**Status:** Verified & Compiled  
-
-### Summary
-Added recursive deletion with in-order successor search. Time complexity: O(log N) average, O(N) worst case.
-
-```cpp
-TreeNode* deleteNode(TreeNode* root, int key) {
-    if (!root) return root;
-    if (key < root->val) root->left = deleteNode(root->left, key);
-    else if (key > root->val) root->right = deleteNode(root->right, key);
-    else {
-        if (!root->left) { TreeNode* temp = root->right; delete root; return temp; }
-        else if (!root->right) { TreeNode* temp = root->left; delete root; return temp; }
-        TreeNode* temp = minValueNode(root->right);
-        root->val = temp->val;
-        root->right = deleteNode(root->right, temp->val);
-    }
-    return root;
-}
-```
-
 ## [2026-08-19 04:15:09 UTC] perf(dsa/arrays): optimize Two Pointer approach for Trapping Rain Water problem
 
 **Module:** `dsa/arrays`  
@@ -113,5 +89,29 @@ void computeLPSArray(string pat, int M, vector<int>& lps) {
             else { lps[i] = 0; i++; }
         }
     }
+}
+```
+
+## [2026-08-19 06:15:09 UTC] feat(dsa/trees): implement Binary Search Tree deletion and auto-rebalancing logic
+
+**Module:** `dsa/trees`  
+**Status:** Verified & Compiled  
+
+### Summary
+Added recursive deletion with in-order successor search. Time complexity: O(log N) average, O(N) worst case.
+
+```cpp
+TreeNode* deleteNode(TreeNode* root, int key) {
+    if (!root) return root;
+    if (key < root->val) root->left = deleteNode(root->left, key);
+    else if (key > root->val) root->right = deleteNode(root->right, key);
+    else {
+        if (!root->left) { TreeNode* temp = root->right; delete root; return temp; }
+        else if (!root->right) { TreeNode* temp = root->left; delete root; return temp; }
+        TreeNode* temp = minValueNode(root->right);
+        root->val = temp->val;
+        root->right = deleteNode(root->right, temp->val);
+    }
+    return root;
 }
 ```
